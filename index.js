@@ -22,7 +22,7 @@ const MAX_STONES = 15
 let stones = [] // cloned rock meshes
 
 // Stone scale factor
-let stoneScale = 0.4scale0.4
+let stoneScale = 0.4
 
 function updateStoneScale(value) {
   stoneScale = value
