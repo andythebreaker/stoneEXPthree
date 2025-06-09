@@ -249,7 +249,6 @@ function initWebSocket() {
       }
     }, fetchInterval)
   })
-
   ws.addEventListener('message', event => {
     try {
       const data = JSON.parse(event.data)
@@ -257,8 +256,21 @@ function initWebSocket() {
         for (let i = 0; i < Math.min(MAX_STONES, data.length); i++) {
           const pair = data[i]
           if (Array.isArray(pair) && pair.length >= 2) {
-            const [x, y] = pair
-            if (stones[i]) stones[i].position.set(x, y, 0)
+            // 正規化座標 (0~1) 轉換為世界座標
+            const [normalizedX, normalizedY] = pair
+            
+            // 計算視口範圍，考慮相機的視野角度和距離
+            const distance = camera.position.z
+            const vFOV = camera.fov * Math.PI / 180 // 轉換為弧度
+            const height = 2 * Math.tan(vFOV / 2) * distance
+            const width = height * camera.aspect
+            
+            // 將正規化座標 (0~1) 轉換為世界座標
+            // 0,0 對應左下角，1,1 對應右上角
+            const worldX = (normalizedX - 0.5) * width
+            const worldY = (normalizedY - 0.5) * height
+            
+            if (stones[i]) stones[i].position.set(worldX, worldY, 0)
           }
         }
       }
