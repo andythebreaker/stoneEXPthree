@@ -43,8 +43,11 @@ function parseHashParams() {
 var hadBeenTriggered = false;
 // Check status from URL
 function checkStatus() {
-  if (hadBeenTriggered===false&& (urlParams.clean === 'true' || urlParams.clean === true)) {
-  fetch(`http://${statusCheckURL}`)
+  if (
+    hadBeenTriggered === false &&
+    (urlParams.clean === 'true' || urlParams.clean === true)
+  ) {
+    fetch(`http://${statusCheckURL}`)
     .then(response => response.text())
     .then(text => {
       if (text.trim() === 'True') {
@@ -214,7 +217,7 @@ function init() {
   urlParams = parseHashParams()
   
   // Set clean mode if specified
-  if (urlParams.clean === 'true' || urlParams.clean === true) {
+  if (urlParams.clean === 'true' || urlParams.clean === true || urlParams.clear === 'true' || urlParams.clear === true) {
     cleanMode = true
   }
   
@@ -321,7 +324,9 @@ window.addEventListener('resize', function() {
 // Initialize status checking when document is loaded
 document.addEventListener('DOMContentLoaded', function() {
   // Start polling status URL every 100ms
-  statusCheckInterval = setInterval(checkStatus, 100);
+  if (urlParams.clean === 'true' || urlParams.clean === true) {
+    statusCheckInterval = setInterval(checkStatus, 100);
+}
 });
 
 init()
