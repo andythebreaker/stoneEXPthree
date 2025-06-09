@@ -11,6 +11,7 @@ const smokeTexture = textureLoader.load('./smoke.png')
 // Add OBJLoader
 const objLoader = new THREE.OBJLoader()
 let rock // Variable to store the loaded rock model
+let rockRotationSpeed = new THREE.Vector3(0, 0, 0) // Speed of rock rotation
 
 // URL hash parameters
 let urlParams = {}
@@ -90,7 +91,20 @@ function loadRockModel() {
           // Scale the rock to be more visible
           object.scale.set(50, 50, 50)
           
+          // Hide the ground plane if present in the model
+          object.traverse(child => {
+            if (child.isMesh && child.name && child.name.toLowerCase().includes('plane')) {
+              child.visible = false
+            }
+          })
+
           rock = object
+          // Random rotation speed for each axis
+          rockRotationSpeed.set(
+            Math.random() * 0.02 - 0.01,
+            Math.random() * 0.02 - 0.01,
+            Math.random() * 0.02 - 0.01
+          )
           scene.add(rock)
           console.log('Rock model loaded successfully')
       
@@ -304,6 +318,12 @@ function init() {
 function render() {
   if (explosion) {
     explosion.update()
+  }
+
+  if (rock) {
+    rock.rotation.x += rockRotationSpeed.x
+    rock.rotation.y += rockRotationSpeed.y
+    rock.rotation.z += rockRotationSpeed.z
   }
 
   if (stats) {
