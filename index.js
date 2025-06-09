@@ -21,6 +21,16 @@ let ws
 const MAX_STONES = 15
 let stones = [] // cloned rock meshes
 
+// Stone scale factor
+let stoneScale = 1
+
+function updateStoneScale(value) {
+  stoneScale = value
+  stones.forEach(s => {
+    s.scale.set(50 * stoneScale, 50 * stoneScale, 50 * stoneScale)
+  })
+}
+
 // URL hash parameters
 let urlParams = {}
 let statusCheckURL = '127.0.0.1:20597/status'
@@ -97,7 +107,7 @@ function loadRockModel() {
           object.position.set(0, 0, 0)
           
           // Scale the rock to be more visible
-          object.scale.set(50, 50, 50)
+          object.scale.set(50 * stoneScale, 50 * stoneScale, 50 * stoneScale)
           
           // Hide the ground plane if present in the model
           object.traverse(child => {
@@ -121,6 +131,9 @@ function loadRockModel() {
             stones.push(clone)
             scene.add(clone)
           }
+
+          // Apply scale to all stones
+          updateStoneScale(stoneScale)
       
       // Add a helper box around the rock to visualize its boundaries
       //const box = new THREE.Box3().setFromObject(rock);
@@ -165,6 +178,7 @@ let controls = new (function() {
   }
   this.pointSize = 20
   this.cameraNear = 500
+  this.stoneScale = stoneScale
   // this.pointCount = 1000
   
   // Add light position controls
@@ -287,6 +301,15 @@ function initWebSocket() {
 function init() {
   // Get URL parameters from hash
   urlParams = parseHashParams()
+
+  if (urlParams.scale || urlParams.stoneScale) {
+    const v = parseFloat(urlParams.scale || urlParams.stoneScale)
+    if (!isNaN(v)) {
+      stoneScale = v
+    }
+  }
+
+  controls.stoneScale = stoneScale
   
   // Set clean mode if specified
   if (urlParams.clean === 'true' || urlParams.clean === true || urlParams.clear === 'true' || urlParams.clear === true) {
@@ -348,6 +371,9 @@ function init() {
       )
       camera.position.set(0, 0, 1000)
       camera.lookAt(scene.position)
+    })
+    gui.add(controls, 'stoneScale', 0.1, 5).onChange(value => {
+      updateStoneScale(value)
     })
     
     // Add light position controls

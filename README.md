@@ -11,6 +11,7 @@
 - **clean**：設定為 `true` 時進入簡潔模式，隱藏 GUI 與統計資訊，並啟用狀態輪詢機制。
 - **clear**：設定為 `true` 時同樣隱藏 GUI 與統計資訊，但不進行狀態輪詢。
 - **listenURL**：指定狀態檢查的網址，預設為 `127.0.0.1:20597/status`。僅在開啟 `clean` 模式時生效。
+- **scale**：調整石頭模型的縮放倍數，預設為 `1`。
 
 ## 功能說明
 - 載入 `Rock1` 目錄中的岩石模型 (`Rock1.obj`/`Rock1.mtl`)。
@@ -18,6 +19,7 @@
   - `explosionTrigger`：手動觸發爆炸，並隱藏岩石。
   - `pointSize`：調整粒子尺寸。
   - `cameraNear`：變更相機近裁剪面。
+  - `stoneScale`：統一調整所有石頭模型的大小。
   - `lightX`、`lightY`、`lightZ`：調整方向光位置。
 - Stats 面板呈現渲染效能。
 - 在 `clean` 模式下，如設定 `listenURL`，網頁會每 100ms 輪詢該網址，若回傳 `True` 即自動觸發爆炸。
