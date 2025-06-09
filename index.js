@@ -11,7 +11,15 @@ const smokeTexture = textureLoader.load('./smoke.png')
 // Add OBJLoader
 const objLoader = new THREE.OBJLoader()
 let rock // Variable to store the loaded rock model
-let rockRotationSpeed = new THREE.Vector3(0, 0, 0) // Speed of rock rotation
+
+// WebSocket configuration
+const wsURL = 'ws://127.0.0.1:9980'
+const fetchInterval = 1000 / 25 // 25 FPS
+let ws
+
+// Stones
+const MAX_STONES = 15
+let stones = [] // cloned rock meshes
 
 // URL hash parameters
 let urlParams = {}
@@ -99,14 +107,20 @@ function loadRockModel() {
           })
 
           rock = object
-          // Random rotation speed for each axis
-          rockRotationSpeed.set(
-            Math.random() * 0.02 - 0.01,
-            Math.random() * 0.02 - 0.01,
-            Math.random() * 0.02 - 0.01
-          )
-          scene.add(rock)
           console.log('Rock model loaded successfully')
+
+          // Create clones for stones
+          for (let i = 0; i < MAX_STONES; i++) {
+            const clone = object.clone()
+            clone.position.set(0, 0, 0)
+            clone.userData.rotationSpeed = new THREE.Vector3(
+              Math.random() * 0.02 - 0.01,
+              Math.random() * 0.02 - 0.01,
+              Math.random() * 0.02 - 0.01
+            )
+            stones.push(clone)
+            scene.add(clone)
+          }
       
       // Add a helper box around the rock to visualize its boundaries
       //const box = new THREE.Box3().setFromObject(rock);
@@ -143,11 +157,11 @@ let controls = new (function() {
       explosion.destroy()
     }
     explosion = new Explosion(0, 0)
-    
+
     // Hide the rock when explosion is triggered
-    if (rock) {
-      rock.visible = false
-    }
+    stones.forEach(s => {
+      s.visible = false
+    })
   }
   this.pointSize = 20
   this.cameraNear = 500
@@ -224,6 +238,38 @@ class Explosion {
     // console.log(renderer.info)
     this.dirs.length = 0
   }
+}
+
+function initWebSocket() {
+  ws = new WebSocket(wsURL)
+  ws.addEventListener('open', () => {
+    setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send('GBS')
+      }
+    }, fetchInterval)
+  })
+
+  ws.addEventListener('message', event => {
+    try {
+      const data = JSON.parse(event.data)
+      if (Array.isArray(data)) {
+        for (let i = 0; i < Math.min(MAX_STONES, data.length); i++) {
+          const pair = data[i]
+          if (Array.isArray(pair) && pair.length >= 2) {
+            const [x, y] = pair
+            if (stones[i]) stones[i].position.set(x, y, 0)
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Invalid WS data', e)
+    }
+  })
+
+  ws.addEventListener('error', err => {
+    console.error('WebSocket error:', err)
+  })
 }
 
 function init() {
@@ -313,6 +359,9 @@ function init() {
   }
 
   document.body.appendChild(renderer.domElement)
+
+  // Initialize WebSocket after scene setup
+  initWebSocket()
 }
 
 function render() {
@@ -320,11 +369,13 @@ function render() {
     explosion.update()
   }
 
-  if (rock) {
-    rock.rotation.x += rockRotationSpeed.x
-    rock.rotation.y += rockRotationSpeed.y
-    rock.rotation.z += rockRotationSpeed.z
-  }
+  stones.forEach(s => {
+    if (s.userData.rotationSpeed) {
+      s.rotation.x += s.userData.rotationSpeed.x
+      s.rotation.y += s.userData.rotationSpeed.y
+      s.rotation.z += s.userData.rotationSpeed.z
+    }
+  })
 
   if (stats) {
     stats.update()
