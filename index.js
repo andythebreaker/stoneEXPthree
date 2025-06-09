@@ -91,6 +91,13 @@ function loadRockModel() {
           // Scale the rock to be more visible
           object.scale.set(50, 50, 50)
           
+          // Hide the ground plane if present in the model
+          object.traverse(child => {
+            if (child.isMesh && child.name && child.name.toLowerCase().includes('plane')) {
+              child.visible = false
+            }
+          })
+
           rock = object
           // Random rotation speed for each axis
           rockRotationSpeed.set(
